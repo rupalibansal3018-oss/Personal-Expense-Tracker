@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Expense Tracker</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header & Navigation -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-badge">₹</div>
+        <div>
+          <h1>Personal Expense Tracker</h1>
+          <p>Smart daily expenses &amp; monthly budget manager</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <nav class="nav-tabs" aria-label="Pages">
+          <button type="button" class="nav-btn active" data-page="home">Home</button>
+          <button type="button" class="nav-btn" data-page="add">+ Add Transaction</button>
+          <button type="button" class="nav-btn" data-page="reports">Reports</button>
+          <button type="button" class="nav-btn" data-page="about">About</button>
+        </nav>
+
+        <button type="button" id="themeToggleBtn" class="icon-btn" title="Toggle Dark/Light Mode">
+          🌙
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGE 1: HOME -->
+    <main id="page-home" class="page active">
+      <section class="summary-grid">
+        <article class="card stat-card balance-card">
+          <div class="stat-top">
+            <span class="label">Current Balance</span>
+            <span class="pill">Net</span>
+          </div>
+          <strong id="balanceAmount" class="value">₹0.00</strong>
+          <small class="stat-hint">Income minus total expenses</small>
+        </article>
+
+        <article class="card stat-card">
+          <div class="stat-top">
+            <span class="label">Total Income</span>
+            <span class="pill income-pill">↑ In</span>
+          </div>
+          <strong id="incomeAmount" class="value income">₹0.00</strong>
+          <small class="stat-hint">All recorded earnings</small>
+        </article>
+
+        <article class="card stat-card">
+          <div class="stat-top">
+            <span class="label">Total Expenses</span>
+            <span class="pill expense-pill">↓ Out</span>
+          </div>
+          <strong id="expenseAmount" class="value expense">₹0.00</strong>
+          <small class="stat-hint">All recorded spending</small>
+        </article>
+      </section>
+
+      <!-- Monthly Budget & Progress Bar -->
+      <section class="card budget-section">
+        <div class="budget-header">
+          <div>
+            <h2>Monthly Budget Usage</h2>
+            <p id="budgetSummaryText" class="muted">Spent ₹0.00 of ₹10,000.00 budget</p>
+          </div>
+          <form id="budgetForm" class="inline-budget-form">
+            <label for="monthlyBudgetInput" class="sr-only">Monthly Budget</label>
+            <input
+              type="number"
+              id="monthlyBudgetInput"
+              min="1"
+              step="100"
+              placeholder="New Budget (₹)"
+            />
+            <button type="submit" class="btn btn-secondary">Update Budget</button>
+          </form>
+        </div>
+
+        <div class="progress-track">
+          <div id="budgetProgressBar" class="progress-fill" style="width: 0%;"></div>
+        </div>
+        <div class="budget-meta">
+          <span id="budgetPercentText">0% used</span>
+          <span id="budgetRemainingText">₹10,000.00 remaining</span>
+        </div>
+      </section>
+
+      <!-- Search, Filters, Sort & CSV Export -->
+      <section class="card controls-section">
+        <div class="controls-row">
+          <input
+            type="search"
+            id="searchInput"
+            placeholder="Search title, note, or category..."
+            aria-label="Search transactions"
+          />
+
+          <select id="filterType" aria-label="Filter by type">
+            <option value="all">All Types</option>
+            <option value="income">Income Only</option>
+            <option value="expense">Expense Only</option>
+          </select>
+
+          <select id="filterCategory" aria-label="Filter by category">
+            <option value="all">All Categories</option>
+            <option value="Food">🍔 Food</option>
+            <option value="Travel">✈️ Travel</option>
+            <option value="Shopping">🛍️ Shopping</option>
+            <option value="Bills">🧾 Bills</option>
+            <option value="Salary">💼 Salary</option>
+            <option value="Other">📌 Other</option>
+          </select>
+
+          <select id="sortSelect" aria-label="Sort transactions">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="highest">Highest Amount</option>
+            <option value="lowest">Lowest Amount</option>
+          </select>
+
+          <button type="button" id="exportCsvBtn" class="btn btn-outline">⬇ CSV</button>
+        </div>
+      </section>
+
+      <!-- Transactions List -->
+      <section class="card">
+        <div class="section-title-row">
+          <div>
+            <h2>Transactions History</h2>
+          </div>
+          <div class="header-right-actions">
+            <button type="button" id="loadSampleBtn" class="btn btn-outline btn-small">Load Sample Data</button>
+            <span id="transactionCount" class="badge">0 items</span>
+          </div>
+        </div>
+        <div id="transactionList" class="transaction-list"></div>
+      </section>
+    </main>
+
+    <!-- PAGE 2: ADD / EDIT TRANSACTION -->
+    <section id="page-add" class="page">
+      <div class="card form-card">
+        <h2 id="formHeading">Add New Transaction</h2>
+        <p class="muted">Enter transaction details below. Validated automatically before saving.</p>
+
+        <form id="transactionForm" novalidate>
+          <input type="hidden" id="editId" />
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="txTitle">Title *</label>
+              <input type="text" id="txTitle" placeholder="e.g. Metro Card, Lunch, Internship Stipend" />
+              <small class="error-msg" id="titleError"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="txAmount">Amount (₹) *</label>
+              <input type="number" id="txAmount" step="0.01" placeholder="e.g. 500" />
+              <small class="error-msg" id="amountError"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="txType">Transaction Type *</label>
+              <select id="txType">
+                <option value="expense">Expense (-)</option>
+                <option value="income">Income (+)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="txCategory">Category *</label>
+              <select id="txCategory">
+                <option value="Food">🍔 Food</option>
+                <option value="Travel">✈️ Travel</option>
+                <option value="Shopping">🛍️ Shopping</option>
+                <option value="Bills">🧾 Bills</option>
+                <option value="Salary">💼 Salary</option>
+                <option value="Other">📌 Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="txDate">Date *</label>
+              <input type="date" id="txDate" />
+              <small class="error-msg" id="dateError"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="txNote">Note (Optional)</label>
+              <input type="text" id="txNote" placeholder="e.g. Paid via UPI" />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="submitTxBtn" class="btn btn-primary">Save Transaction</button>
+            <button type="button" id="cancelEditBtn" class="btn btn-outline hidden">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- PAGE 3: REPORTS -->
+    <section id="page-reports" class="page">
+      <div class="reports-grid">
+        <article class="card">
+          <h2>Monthly Expense &amp; Income Summary</h2>
+          <p class="muted">Month-by-month comparison of earnings and spending.</p>
+          <div id="monthlySummaryContainer" class="summary-list"></div>
+        </article>
+
+        <article class="card">
+          <h2>Category-wise Spending Breakdown</h2>
+          <p class="muted">Visual share of your total expenses by category.</p>
+          <div id="categoryBreakdownContainer" class="summary-list"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- PAGE 4: ABOUT -->
+    <section id="page-about" class="page">
+      <div class="card about-card">
+        <h2>About Personal Expense Tracker</h2>
+        <p class="muted">
+          A complete frontend web application built to track daily income and expenses, monitor
+          monthly budget usage, visualize spending reports, and export records to CSV—powered by
+          browser <strong>Local Storage</strong>.
+        </p>
+
+        <h3>Core Concepts &amp; Features</h3>
+        <ul class="concept-list">
+          <li><strong>HTML Forms &amp; Validation:</strong> Clean inputs with inline error messages for empty fields, invalid numbers, and dates.</li>
+          <li><strong>CSS Flexbox &amp; Grid:</strong> Adaptive responsive layout with Light &amp; Dark theme variables.</li>
+          <li><strong>JavaScript Objects &amp; Arrays:</strong> Structured transaction objects managed with <code>filter()</code>, <code>map()</code>, <code>reduce()</code>, and <code>sort()</code>.</li>
+          <li><strong>DOM Manipulation &amp; Events:</strong> Live search, multi-filter, instant KPI updates, visual progress bars, and toast alerts.</li>
+          <li><strong>Local Storage &amp; CSV Export:</strong> Persistent browser storage plus one-click spreadsheet export.</li>
+        </ul>
+
+        <div class="danger-zone">
+          <button type="button" id="clearAllDataBtn" class="btn btn-danger">Reset All Data</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
